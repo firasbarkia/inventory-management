@@ -248,7 +248,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Supplier A\",\n  \"contactInfo\": \"contact@example.com\"\n}"
+              "raw": "{\n  \"name\": \"Supplier A\",\n  \"contactInfo\": \"contact@example.com\",\n  \"user\": { \"id\": 2 }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/suppliers",
@@ -267,7 +267,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Supplier A\",\n  \"contactInfo\": \"newcontact@example.com\"\n}"
+              "raw": "{\n  \"name\": \"Updated Supplier A\",\n  \"contactInfo\": \"newcontact@example.com\",\n  \"user\": { \"id\": 2 }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/suppliers/1",

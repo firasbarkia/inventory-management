@@ -40,7 +40,11 @@ public class SupplierController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
     @PostMapping
-    public ResponseEntity<Supplier> createSupplier(@RequestBody Supplier supplier) {
+    public ResponseEntity<?> createSupplier(@RequestBody Supplier supplier) {
+        if (supplier.getUser() == null || supplier.getUser().getId() == null) {
+            return ResponseEntity.badRequest().body("Supplier must be linked to an existing user");
+        }
+        // Optionally, check if user exists and has SUPPLIER role
         Supplier saved = supplierRepository.save(supplier);
         return ResponseEntity.ok(saved);
     }
