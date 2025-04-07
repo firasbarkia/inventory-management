@@ -1,13 +1,21 @@
 package com.inventory.controller;
 
-import com.inventory.model.User;
-import com.inventory.service.IUserService;
-import com.inventory.security.JwtUtil;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
+import java.util.Map;
 import java.util.Set;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.inventory.model.User;
+import com.inventory.security.JwtUtil;
+import com.inventory.service.IUserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -15,10 +23,12 @@ public class AuthController {
 
     private final IUserService userService;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthController(IUserService userService, JwtUtil jwtUtil) {
+    public AuthController(IUserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/register")
@@ -27,12 +37,21 @@ public class AuthController {
         return ResponseEntity.ok(createdUser);
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<String> login(Authentication authentication) {
-        Set<String> roles = authentication.getAuthorities().stream()
-                .map(auth -> auth.getAuthority())
-                .collect(java.util.stream.Collectors.toSet());
-        String token = jwtUtil.generateToken(authentication.getName(), roles);
-        return ResponseEntity.ok(token);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        try {
+            String username = credentials.get("username");
+            String password = credentials.get("password");
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+            Set<String> roles = authentication.getAuthorities().stream()
+                    .map(auth -> auth.getAuthority())
+                    .collect(java.util.stream.Collectors.toSet());
+            String token = jwtUtil.generateToken(username, roles);
+            return ResponseEntity.ok(token);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401).body("Invalid username or password");
+        }
     }
 }

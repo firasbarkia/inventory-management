@@ -1,12 +1,13 @@
 package com.inventory.service;
 
-import com.inventory.model.User;
-import com.inventory.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import com.inventory.model.User;
+import com.inventory.repository.UserRepository;
 
 @Service
 public class UserService implements IUserService {
@@ -46,5 +47,10 @@ public class UserService implements IUserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

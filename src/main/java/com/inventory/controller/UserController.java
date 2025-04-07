@@ -20,7 +20,10 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        if (userService.getUserByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.status(409).body("Username already exists");
+        }
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok(createdUser);
     }
