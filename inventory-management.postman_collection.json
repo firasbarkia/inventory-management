@@ -1,15 +1,15 @@
 {
   "info": {
-    "name": "Inventory Management API",
+    "name": "Inventory Management API - Role Workflows",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for Inventory Management API. Update this collection as the app evolves."
+    "description": "Postman collection demonstrating workflows for different user roles in the Inventory Management API."
   },
   "item": [
     {
-      "name": "Auth",
+      "name": "1. Authentication (Common)",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register Admin User",
           "request": {
             "method": "POST",
             "header": [
@@ -17,7 +17,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password\",\n  \"email\": \"test@example.com\",\n  \"roles\": [\"TEACHER\"]\n}"
+              "raw": "{\n  \"username\": \"admin_user\",\n  \"password\": \"adminpass\",\n  \"email\": \"admin@example.com\",\n  \"roles\": [\"ADMIN\"]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
@@ -27,7 +27,7 @@
           }
         },
         {
-          "name": "Login User",
+          "name": "Register Worker User",
           "request": {
             "method": "POST",
             "header": [
@@ -35,7 +35,25 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password\"\n}"
+              "raw": "{\n  \"username\": \"worker_user\",\n  \"password\": \"workerpass\",\n  \"email\": \"worker@example.com\",\n  \"roles\": [\"WORKER\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User (Admin/Worker)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_user\",\n  \"password\": \"adminpass\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
@@ -51,7 +69,9 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.environment.set(\"jwt_token\", pm.response.text());"
+                  "var token = pm.response.text();",
+                  "pm.environment.set(\"jwt_token\", token);",
+                  "console.log(\"JWT Token set: \", token);"
                 ],
                 "type": "text/javascript"
               }
@@ -61,69 +81,371 @@
       ]
     },
     {
-      "name": "Users",
+      "name": "2. Admin Workflow",
+      "description": "Requires ADMIN role. Login first using the 'Login User' request.",
       "item": [
         {
-          "name": "Get All Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/admin/users",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "users"]
-            }
-          }
-        },
-        {
-          "name": "Create User",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"pass\",\n  \"email\": \"admin@example.com\",\n  \"roles\": [\"ADMIN\"]\n}"
+          "name": "Users Management",
+          "item": [
+             {
+              "name": "Get All Users",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/users",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "users"]
+                }
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/admin/users",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "users"]
-            }
-          }
-        },
-        {
-          "name": "Duplicate User Registration",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"pass\",\n  \"email\": \"admin@example.com\",\n  \"roles\": [\"ADMIN\"]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/admin/users",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "users"]
-            }
-          },
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 409 Conflict\", function () {",
-                  "    pm.response.to.have.status(409);",
-                  "});"
+              "name": "Create User (e.g., another Worker)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
                 ],
-                "type": "text/javascript"
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"new_worker\",\n  \"password\": \"newpass\",\n  \"email\": \"new_worker@example.com\",\n  \"roles\": [\"WORKER\"]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/users",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "users"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suppliers Management",
+          "item": [
+            {
+              "name": "Get All Suppliers",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/suppliers",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "suppliers"]
+                }
+              }
+            },
+            {
+              "name": "Get Supplier By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/suppliers/{{supplier_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "suppliers", "{{supplier_id}}"],
+                  "variable": [ { "key": "supplier_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Create Supplier",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Supplier B\",\n  \"contactInfo\": \"supplierB@contact.com\",\n  \"email\": \"orders@supplierb.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/suppliers",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "suppliers"]
+                }
+              }
+            },
+            {
+              "name": "Update Supplier",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Supplier B\",\n  \"contactInfo\": \"newcontact@supplierb.com\",\n  \"email\": \"neworders@supplierb.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/suppliers/{{supplier_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "suppliers", "{{supplier_id}}"],
+                  "variable": [ { "key": "supplier_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Delete Supplier",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/suppliers/{{supplier_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "suppliers", "{{supplier_id}}"],
+                  "variable": [ { "key": "supplier_id", "value": "1" } ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Items Management",
+          "item": [
+            {
+              "name": "Get All Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items"]
+                }
+              }
+            },
+            {
+              "name": "Get Item By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/items/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items", "{{item_id}}"],
+                  "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Create Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Item C\",\n  \"quantity\": 50,\n  \"minStockLevel\": 10,\n  \"supplier\": { \"id\": {{supplier_id}} }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items"],
+                  "variable": [ { "key": "supplier_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Update Item",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Item C\",\n  \"quantity\": 75,\n  \"minStockLevel\": 15,\n  \"supplier\": { \"id\": {{supplier_id}} }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/items/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items", "{{item_id}}"],
+                  "variable": [
+                    { "key": "item_id", "value": "1" },
+                    { "key": "supplier_id", "value": "1" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Item",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/items/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items", "{{item_id}}"],
+                   "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Requests Management",
+          "item": [
+            {
+              "name": "Get All Requests",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/requests",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests"]
+                }
+              }
+            },
+            {
+              "name": "Get Request By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/requests/{{request_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests", "{{request_id}}"],
+                  "variable": [ { "key": "request_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Update Request Status",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"APPROVED\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/requests/{{request_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests", "{{request_id}}"],
+                  "variable": [ { "key": "request_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Delete Request",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/requests/{{request_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests", "{{request_id}}"],
+                  "variable": [ { "key": "request_id", "value": "1" } ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notifications Management",
+          "item": [
+            {
+              "name": "Get All Notifications",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications"]
+                }
+              }
+            },
+            {
+              "name": "Get Notification By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications/{{notification_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications", "{{notification_id}}"],
+                  "variable": [ { "key": "notification_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Check and Notify Low Stock",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications/check-low-stock/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications", "check-low-stock", "{{item_id}}"],
+                  "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Notify Supplier By Email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications/notify-supplier/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications", "notify-supplier", "{{item_id}}"],
+                  "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
+            },
+            {
+              "name": "Delete Notification",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications/{{notification_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications", "{{notification_id}}"],
+                  "variable": [ { "key": "notification_id", "value": "1" } ]
+                }
               }
             }
           ]
@@ -131,164 +453,118 @@
       ]
     },
     {
-      "name": "Items",
+      "name": "3. Worker Workflow",
+      "description": "Requires WORKER role. Login first using the 'Login User' request.",
       "item": [
         {
-          "name": "Get All Items",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/items",
-              "host": ["{{base_url}}"],
-              "path": ["api", "items"]
-            }
-          }
-        },
-        {
-          "name": "Get Item By ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/items/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "items", "1"]
-            }
-          }
-        },
-        {
-          "name": "Create Item",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Item A\",\n  \"quantity\": 100,\n  \"supplier\": { \"id\": 1 }\n}"
+          "name": "View Items",
+          "item": [
+            {
+              "name": "Get All Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items"]
+                }
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/items",
-              "host": ["{{base_url}}"],
-              "path": ["api", "items"]
+            {
+              "name": "Get Item By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/items/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "items", "{{item_id}}"],
+                  "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Update Item",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Item A\",\n  \"quantity\": 150,\n  \"supplier\": { \"id\": 1 }\n}"
+          "name": "Manage Requests",
+          "item": [
+            {
+              "name": "Create Request",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"item\": { \"id\": {{item_id}} },\n  \"quantity\": 5,\n  \"status\": \"REQUESTED\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/requests",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests"],
+                  "variable": [ { "key": "item_id", "value": "1" } ]
+                }
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/items/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "items", "1"]
+            {
+              "name": "Get Own Requests (Filter Manually)",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/requests",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "requests"]
+                },
+                "description": "Gets all requests. Filter client-side or implement /api/requests/my-requests."
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Delete Item",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/items/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "items", "1"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Suppliers",
-      "item": [
-        {
-          "name": "Get All Suppliers",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/suppliers",
-              "host": ["{{base_url}}"],
-              "path": ["api", "suppliers"]
-            }
-          }
-        },
-        {
-          "name": "Get Supplier By ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/suppliers/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "suppliers", "1"]
-            }
-          }
-        },
-        {
-          "name": "Create Supplier",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Supplier A\",\n  \"contactInfo\": \"contact@example.com\",\n  \"user\": { \"id\": 2 }\n}"
+          "name": "Manage Notifications",
+          "item": [
+            {
+              "name": "Get Own Notifications (Filter Manually)",
+              "request": {
+                "method": "GET",
+                "header": [
+                   { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications"]
+                },
+                "description": "Gets all notifications for the role. Filter client-side or implement /api/notifications/my-notifications."
+              }
             },
-            "url": {
-              "raw": "{{base_url}}/api/suppliers",
-              "host": ["{{base_url}}"],
-              "path": ["api", "suppliers"]
+             {
+              "name": "Trigger Request Notification (Example)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/notifications/request-notification/{{request_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "notifications", "request-notification", "{{request_id}}"],
+                  "variable": [ { "key": "request_id", "value": "1" } ]
+                },
+                "description": "Notifies workers about a request. Called internally or manually for testing."
+              }
             }
-          }
-        },
-        {
-          "name": "Update Supplier",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Supplier A\",\n  \"contactInfo\": \"newcontact@example.com\",\n  \"user\": { \"id\": 2 }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/suppliers/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "suppliers", "1"]
-            }
-          }
-        },
-        {
-          "name": "Delete Supplier",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/suppliers/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "suppliers", "1"]
-            }
-          }
+          ]
         }
       ]
     }
@@ -296,12 +572,38 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8080",
+      "type": "string"
     },
     {
       "key": "jwt_token",
       "value": "",
-      "description": "JWT token obtained from login request"
+      "type": "string",
+      "description": "JWT token obtained from login request. Use the 'Login User' request to set this."
+    },
+    {
+      "key": "item_id",
+      "value": "1",
+      "type": "string",
+      "description": "Placeholder for item ID"
+    },
+     {
+      "key": "supplier_id",
+      "value": "1",
+      "type": "string",
+      "description": "Placeholder for supplier ID"
+    },
+     {
+      "key": "request_id",
+      "value": "1",
+      "type": "string",
+      "description": "Placeholder for request ID"
+    },
+     {
+      "key": "notification_id",
+      "value": "1",
+      "type": "string",
+      "description": "Placeholder for notification ID"
     }
   ]
 }
