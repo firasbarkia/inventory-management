@@ -1,0 +1,82 @@
+{
+  "info": {
+    "name": "Notification Triggering Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Teacher Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"teacher1\",\n    \"password\": \"password\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Makes a Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"itemId\": 1,\n    \"quantity\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/requests",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "requests"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Worker Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"worker1\",\n    \"password\": \"password\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Worker Gets Notifications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{workerToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/worker",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "notifications", "worker"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

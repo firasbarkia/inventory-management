@@ -42,9 +42,6 @@ public class SecurityConfig {
                             .withUsername(user.getUsername())
                             .password(user.getPassword())
                             .authorities(user.getRoles().toArray(new String[0]))
-                            // Add account status checks if needed for more granular control
-                            // .accountLocked(user.getAccountStatus() == AccountStatus.INACTIVE)
-                            // .disabled(user.getAccountStatus() != AccountStatus.ACTIVE)
                             .build();
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
@@ -62,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/requests", "/api/requests/**").hasAnyAuthority("TEACHER", "ADMIN")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/supplier/**").hasAuthority("SUPPLIER")
+                .requestMatchers("/").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class)

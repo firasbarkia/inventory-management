@@ -1,6 +1,7 @@
 package com.inventory.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.inventory.model.Request;
+import com.inventory.model.RequestDTO;
 import com.inventory.repository.ItemRepository;
 import com.inventory.repository.RequestRepository;
 import com.inventory.repository.UserRepository;
+import com.inventory.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/requests")
@@ -26,30 +29,34 @@ public class RequestController {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-    private final com.inventory.repository.NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public RequestController(RequestRepository requestRepository, UserRepository userRepository, ItemRepository itemRepository, com.inventory.repository.NotificationRepository notificationRepository) {
+    public RequestController(RequestRepository requestRepository, UserRepository userRepository, ItemRepository itemRepository, NotificationService notificationService) {
         this.requestRepository = requestRepository;
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
-        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Request>> getAllRequests() {
-        return ResponseEntity.ok(requestRepository.findAll());
+    public ResponseEntity<List<RequestDTO>> getAllRequests() {
+        List<RequestDTO> requests = requestRepository.findAll().stream()
+            .map(RequestDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(requests);
     }
     @PreAuthorize("hasAnyAuthority('TEACHER', 'WORKER')")
     @GetMapping("/{id}")
-    public ResponseEntity<Request> getRequestById(@PathVariable Long id) {
+    public ResponseEntity<RequestDTO> getRequestById(@PathVariable Long id) {
         return requestRepository.findById(id)
+                .map(RequestDTO::new)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PreAuthorize("hasAnyAuthority('TEACHER')")
     @PostMapping
-    public ResponseEntity<?> createRequest(@RequestBody Request request) {
+    public ResponseEntity<RequestDTO> createRequest(@RequestBody Request request) {
         // Set authenticated teacher
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         userRepository.findByUsername(username).ifPresent(request::setTeacher);
@@ -65,16 +72,17 @@ public class RequestController {
         Request saved = requestRepository.save(request);
 
 
-        return ResponseEntity.ok(saved);
+        notificationService.createWorkerNotification(saved);
+        return ResponseEntity.ok(new RequestDTO(saved));
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'WORKER')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateRequestStatus(@PathVariable Long id, @RequestBody Request request) {
+    public ResponseEntity<RequestDTO> updateRequestStatus(@PathVariable Long id, @RequestBody Request request) {
         return requestRepository.findById(id).map(existing -> {
             existing.setStatus(request.getStatus());
             Request updated = requestRepository.save(existing);
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(new RequestDTO(updated));
         }).orElse(ResponseEntity.notFound().build());
     }
 

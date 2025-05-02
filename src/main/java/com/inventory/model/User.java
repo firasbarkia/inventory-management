@@ -2,6 +2,8 @@ package com.inventory.model;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -26,6 +28,7 @@ public class User {
 
     @Column(unique = true)
     private String username;
+    @JsonIgnore
     private String password;
     private String email;
 
