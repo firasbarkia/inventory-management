@@ -1,15 +1,19 @@
 package com.inventory.service;
 
-import com.inventory.model.Notification;
-import com.inventory.model.Item;
-import com.inventory.model.User;
-import com.inventory.repository.NotificationRepository;
-import com.inventory.repository.ItemRepository;
-import com.inventory.repository.UserRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.inventory.model.Item;
+import com.inventory.model.Notification;
+import com.inventory.model.Request;
+import com.inventory.model.User;
+import com.inventory.model.WorkerNotification;
+import com.inventory.repository.ItemRepository;
+import com.inventory.repository.NotificationRepository;
+import com.inventory.repository.UserRepository;
+import com.inventory.repository.WorkerNotificationRepository;
 
 @Service
 public class NotificationService implements INotificationService {
@@ -17,11 +21,13 @@ public class NotificationService implements INotificationService {
     private final NotificationRepository notificationRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final WorkerNotificationRepository workerNotificationRepository;
 
-    public NotificationService(NotificationRepository notificationRepository, ItemRepository itemRepository, UserRepository userRepository) {
+    public NotificationService(NotificationRepository notificationRepository, ItemRepository itemRepository, UserRepository userRepository, WorkerNotificationRepository workerNotificationRepository) {
         this.notificationRepository = notificationRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.workerNotificationRepository = workerNotificationRepository;
     }
 
     public Notification createShortageNotification(Long itemId, String message) {
@@ -33,6 +39,14 @@ public class NotificationService implements INotificationService {
         notification.setMessage(message);
         notification.setStatus("PENDING");
         return notificationRepository.save(notification);
+    }
+
+    public WorkerNotification createWorkerNotification(Request request) {
+        WorkerNotification workerNotification = new WorkerNotification();
+        workerNotification.setUser(request.getWorker());
+        workerNotification.setRequest(request);
+        workerNotification.setMessage("You have been assigned to a new request: " + request.getId());
+        return workerNotificationRepository.save(workerNotification);
     }
 
     public List<Notification> getAllNotifications() {

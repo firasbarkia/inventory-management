@@ -64,18 +64,6 @@ public class RequestController {
         }
         Request saved = requestRepository.save(request);
 
-        // Create notification for admin
-        userRepository.findAll().stream()
-            .filter(u -> u.getRoles().contains("WORKER"))
-            .findFirst()
-            .ifPresent(admin -> {
-                com.inventory.model.Notification notif = new com.inventory.model.Notification();
-                notif.setMessage("New request for item: " + saved.getItem().getName());
-                notif.setStatus("PENDING");
-                notif.setItem(saved.getItem());
-                notif.setAdmin(admin);
-                notificationRepository.save(notif);
-            });
 
         return ResponseEntity.ok(saved);
     }

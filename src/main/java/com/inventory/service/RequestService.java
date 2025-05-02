@@ -1,15 +1,16 @@
 package com.inventory.service;
 
-import com.inventory.model.Request;
-import com.inventory.model.User;
-import com.inventory.model.Item;
-import com.inventory.repository.RequestRepository;
-import com.inventory.repository.UserRepository;
-import com.inventory.repository.ItemRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.inventory.model.Item;
+import com.inventory.model.Request;
+import com.inventory.model.User;
+import com.inventory.repository.ItemRepository;
+import com.inventory.repository.RequestRepository;
+import com.inventory.repository.UserRepository;
 
 @Service
 public class RequestService implements IRequestService {
@@ -17,11 +18,13 @@ public class RequestService implements IRequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final NotificationService notificationService;
 
-    public RequestService(RequestRepository requestRepository, UserRepository userRepository, ItemRepository itemRepository) {
+    public RequestService(RequestRepository requestRepository, UserRepository userRepository, ItemRepository itemRepository, NotificationService notificationService) {
         this.requestRepository = requestRepository;
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
+        this.notificationService = notificationService;
     }
 
     public Request createRequest(Long teacherId, Long itemId, int quantity) {
@@ -57,7 +60,9 @@ public class RequestService implements IRequestService {
                 .orElseThrow(() -> new RuntimeException("Worker not found"));
         request.setWorker(worker);
         request.setStatus("APPROVED");
-        return requestRepository.save(request);
+        Request savedRequest = requestRepository.save(request);
+        notificationService.createWorkerNotification(savedRequest);
+        return savedRequest;
     }
 
     public Request markAsDelivered(Long requestId) {

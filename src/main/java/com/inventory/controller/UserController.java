@@ -1,12 +1,22 @@
 package com.inventory.controller;
 
-import com.inventory.model.User;
-import com.inventory.service.IUserService;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable; // Import AccountStatus
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping; // Import Set
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.inventory.model.AccountStatus;
+import com.inventory.model.User;
+import com.inventory.service.IUserService;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -33,6 +43,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/pending")
+    public ResponseEntity<List<User>> getPendingUsers() {
+        return ResponseEntity.ok(userService.getUsersByStatus(AccountStatus.PENDING));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return userService.getUserById(id)
@@ -46,6 +61,21 @@ public class UserController {
             User updatedUser = userService.updateUser(id, user);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<User> approveUser(@PathVariable Long id, @RequestBody Set<String> roles) {
+        try {
+            // Ensure roles are provided and not empty for approval
+            if (roles == null || roles.isEmpty()) {
+                 return ResponseEntity.badRequest().body(null); // Or throw a specific exception/return error message
+            }
+            User approvedUser = userService.approveUser(id, roles);
+            return ResponseEntity.ok(approvedUser);
+        } catch (RuntimeException e) {
+            // Handle user not found or other potential errors from the service
             return ResponseEntity.notFound().build();
         }
     }
