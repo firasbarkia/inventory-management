@@ -1,9 +1,11 @@
 package com.inventory.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,71 +13,49 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.inventory.model.Item;
-import com.inventory.repository.ItemRepository;
-import com.inventory.repository.SupplierRepository;
+import com.inventory.service.IItemService;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/items")
 public class ItemController {
 
-    private final ItemRepository itemRepository;
-    private final SupplierRepository supplierRepository;
+    private final IItemService itemService;
 
-    public ItemController(ItemRepository itemRepository, SupplierRepository supplierRepository) {
-        this.itemRepository = itemRepository;
-        this.supplierRepository = supplierRepository;
+    public ItemController(IItemService itemService) {
+        this.itemService = itemService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
+    public ResponseEntity<Item> addItemToSupplier(@RequestParam Long supplierId, @RequestBody Item item) {
+        return ResponseEntity.ok(itemService.addItemToSupplier(supplierId, item));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<Item>> getItemById(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.getItemById(id));
     }
 
     @GetMapping
     public ResponseEntity<List<Item>> getAllItems() {
-        return ResponseEntity.ok(itemRepository.findAll());
+        return ResponseEntity.ok(itemService.getAllItems());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Item> getItemById(@PathVariable Long id) {
-        return itemRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+     @PutMapping("/{id}")
+     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
+    public ResponseEntity<Item> updateItem(@PathVariable Long id, @RequestBody Item updatedItem) {
+        return ResponseEntity.ok(itemService.updateItem(id, updatedItem));
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
-    @PostMapping
-    public ResponseEntity<Object> createItem(@RequestBody Item item) {
-        if (item.getSupplier() != null && item.getSupplier().getId() != null) {
-            return supplierRepository.findById(item.getSupplier().getId())
-                    .<ResponseEntity<Object>>map(supplier -> {
-                        item.setSupplier(supplier);
-                        Item saved = itemRepository.save(item);
-                        return ResponseEntity.ok(saved);
-                    })
-                    .orElse(ResponseEntity.badRequest().body("Supplier with ID " + item.getSupplier().getId() + " does not exist"));
-        } else {
-            Item saved = itemRepository.save(item);
-            return ResponseEntity.ok(saved);
-        }
-    }
-
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody Item item) {
-        return itemRepository.findById(id).map(existing -> {
-            existing.setName(item.getName());
-            existing.setQuantity(item.getQuantity());
-            if (item.getSupplier() != null && item.getSupplier().getId() != null) {
-                supplierRepository.findById(item.getSupplier().getId()).ifPresent(existing::setSupplier);
-            }
-            Item updated = itemRepository.save(existing);
-            return ResponseEntity.ok(updated);
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPPLIER')")
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
-        itemRepository.deleteById(id);
+        itemService.deleteItem(id);
         return ResponseEntity.noContent().build();
     }
 }

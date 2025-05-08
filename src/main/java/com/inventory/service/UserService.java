@@ -23,10 +23,14 @@ public class UserService implements IUserService {
     }
 
     public User createUser(User user) {
+		if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAccountStatus(AccountStatus.PENDING); // Set default status to PENDING
         // Optionally clear roles or set a default PENDING role if needed
         // user.setRoles(Set.of("ROLE_PENDING")); // Example if you want a specific role marker
+		System.out.println("Encoded password: " + user.getPassword());
         return userRepository.save(user);
     }
 

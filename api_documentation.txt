@@ -1,0 +1,36 @@
+API Documentation
+
+Endpoints by Role:
+
+ADMIN:
+  - UserController:
+    * POST /api/admin/users: Creates a new user.
+    * GET /api/admin/users: Retrieves all users.
+    * GET /api/admin/users/pending: Retrieves all users with a PENDING account status.
+    * GET /api/admin/users/{id}: Retrieves a user by their ID.
+    * PUT /api/admin/users/{id}: Updates a user.
+    * PUT /api/admin/users/{id}/approve: Approves a user and assigns roles.
+    * DELETE /api/admin/users/{id}: Deletes a user.
+  - SupplierController:
+    * POST /api/suppliers: Creates a new supplier.
+    * GET /api/suppliers/{id}: Retrieves a supplier by its ID.
+    * GET /api/suppliers: Retrieves all suppliers.
+    * DELETE /api/suppliers/{id}: Deletes a supplier.
+
+TEACHER:
+  - RequestController:
+    * POST /api/requests: Creates a new request.
+    * DELETE /api/requests/{id}: Deletes a request.
+
+WORKER:
+  PUT /api/requests/{id}: Updates the status of a request.
+
+SUPPLIER:
+  - SupplierController:
+    * PUT /api/suppliers/{id}: Updates a supplier.
+
+ALL:
+  - RequestController:
+    * GET /api/requests: Retrieves all requests.
+  - RequestController:
+    * GET /api/requests/{id}: Retrieves a request by its ID.

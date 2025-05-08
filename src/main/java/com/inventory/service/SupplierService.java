@@ -1,37 +1,38 @@
 package com.inventory.service;
 
-import com.inventory.model.Item;
-import com.inventory.model.Supplier;
-import com.inventory.repository.ItemRepository;
-import com.inventory.repository.SupplierRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.inventory.model.Supplier;
+import com.inventory.repository.SupplierRepository;
 
 @Service
 public class SupplierService implements ISupplierService {
 
     private final SupplierRepository supplierRepository;
-    private final ItemRepository itemRepository;
 
-    public SupplierService(SupplierRepository supplierRepository, ItemRepository itemRepository) {
+    public SupplierService(SupplierRepository supplierRepository) {
         this.supplierRepository = supplierRepository;
-        this.itemRepository = itemRepository;
     }
 
+    @Override
     public Supplier createSupplier(Supplier supplier) {
         return supplierRepository.save(supplier);
     }
 
+    @Override
     public Optional<Supplier> getSupplierById(Long id) {
         return supplierRepository.findById(id);
     }
 
+    @Override
     public List<Supplier> getAllSuppliers() {
         return supplierRepository.findAll();
     }
 
+    @Override
     public Supplier updateSupplier(Long id, Supplier updatedSupplier) {
         return supplierRepository.findById(id).map(supplier -> {
             supplier.setName(updatedSupplier.getName());
@@ -40,26 +41,8 @@ public class SupplierService implements ISupplierService {
         }).orElseThrow(() -> new RuntimeException("Supplier not found"));
     }
 
+    @Override
     public void deleteSupplier(Long id) {
         supplierRepository.deleteById(id);
-    }
-
-    public Item addItemToSupplier(Long supplierId, Item item) {
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new RuntimeException("Supplier not found"));
-        item.setSupplier(supplier);
-        return itemRepository.save(item);
-    }
-
-    public Item updateItem(Long itemId, Item updatedItem) {
-        return itemRepository.findById(itemId).map(item -> {
-            item.setName(updatedItem.getName());
-            item.setQuantity(updatedItem.getQuantity());
-            return itemRepository.save(item);
-        }).orElseThrow(() -> new RuntimeException("Item not found"));
-    }
-
-    public void deleteItem(Long itemId) {
-        itemRepository.deleteById(itemId);
     }
 }
