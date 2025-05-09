@@ -130,14 +130,6 @@ public class NotificationController {
         return ResponseEntity.ok(workerNotificationRepository.findAll());
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'WORKER')")
-    @GetMapping("/worker/{id}")
-    public ResponseEntity<WorkerNotification> getWorkerNotificationById(@PathVariable Long id) {
-        // Add logic here to check if current user owns this notification
-        return workerNotificationRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
     
     @PreAuthorize("hasAnyAuthority('ADMIN', 'WORKER')")
     @DeleteMapping("/worker/{id}")

@@ -73,8 +73,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/items", "/api/items/**").permitAll() // Allow public read access to items
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/suppliers", "/api/suppliers/**").hasAnyAuthority("SUPPLIER", "ADMIN")// Allow public read access to suppliers
-                // Only allow TEACHER or ADMIN to access request endpoints
-                .requestMatchers("/api/requests", "/api/requests/**").hasAnyAuthority("TEACHER", "ADMIN")
+                // Allow TEACHER, WORKER, or ADMIN to access request endpoints
+                .requestMatchers("/api/requests", "/api/requests/**").hasAnyAuthority("TEACHER", "WORKER", "ADMIN")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/supplier/**").hasAuthority("SUPPLIER")
                 .requestMatchers("/").permitAll()

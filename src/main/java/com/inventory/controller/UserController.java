@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,11 +38,13 @@ public class UserController {
 		if (user.getPassword() == null || user.getPassword().isEmpty()) {
             return ResponseEntity.badRequest().body("Password cannot be empty");
         }
-        if (userService.getUserByUsername(user.getUsername()).isPresent()) {
+        try {
+            userService.getUserByUsername(user.getUsername());
             return ResponseEntity.status(409).body("Username already exists");
+        } catch (UsernameNotFoundException e) {
+            User createdUser = userService.createUser(user);
+            return ResponseEntity.ok(createdUser);
         }
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping
@@ -72,11 +75,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}/approve")
-    public ResponseEntity<User> approveUser(@PathVariable Long id, @RequestBody Set<String> roles) {
+    public ResponseEntity<?> approveUser(@PathVariable Long id, @RequestBody Set<String> roles) {
         try {
             // Ensure roles are provided and not empty for approval
             if (roles == null || roles.isEmpty()) {
-                 return ResponseEntity.badRequest().body(null); // Or throw a specific exception/return error message
+                 return ResponseEntity.badRequest().body("Roles cannot be empty for approval");
             }
             User approvedUser = userService.approveUser(id, roles);
             return ResponseEntity.ok(approvedUser);

@@ -10,7 +10,7 @@ import com.inventory.model.User; // Import Set for roles
 public interface IUserService {
     User createUser(User user);
     Optional<User> getUserById(Long id);
-    Optional<User> getUserByUsername(String username);
+    User getUserByUsername(String username);
     List<User> getAllUsers();
     List<User> getUsersByStatus(AccountStatus status); // Add method to find users by status
     User updateUser(Long id, User updatedUser);

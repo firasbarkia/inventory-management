@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.inventory.model.Item;
 import com.inventory.model.Notification;
@@ -77,5 +78,11 @@ public class NotificationService implements INotificationService {
         notification.setAdmin(admin);
         notification.setStatus("DISAPPROVED");
         return notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public void deleteWorkerNotificationsByRequestId(Long requestId) {
+        workerNotificationRepository.deleteByRequestId(requestId);
     }
 }

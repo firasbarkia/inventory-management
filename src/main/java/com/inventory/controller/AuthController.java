@@ -8,12 +8,17 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.inventory.model.User;
 import com.inventory.security.JwtUtil;
 import com.inventory.service.IUserService;
-
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/auth")
@@ -22,17 +27,25 @@ public class AuthController {
     private final IUserService userService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserDetailsService userDetailsService;
 
-    public AuthController(IUserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+    public AuthController(IUserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager, UserDetailsService userDetailsService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody User user) {
         User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
+        User registeredUser = userService.getUserByUsername(user.getUsername());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(registeredUser.getUsername());
+        Set<String> roles = userDetails.getAuthorities().stream()
+                .map(auth -> auth.getAuthority())
+                .collect(java.util.stream.Collectors.toSet());
+        String token = jwtUtil.generateToken(registeredUser.getUsername(), roles);
+        return ResponseEntity.ok(Map.of("token", token, "accountStatus", registeredUser.getAccountStatus().toString(), "roles", roles));
     }
 
     @PostMapping("/login")
@@ -47,7 +60,8 @@ public class AuthController {
                     .map(auth -> auth.getAuthority())
                     .collect(java.util.stream.Collectors.toSet());
             String token = jwtUtil.generateToken(username, roles);
-            return ResponseEntity.ok(token);
+            User user = userService.getUserByUsername(username);
+            return ResponseEntity.ok(Map.of("token", token, "accountStatus", user.getAccountStatus().toString(), "roles", roles));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }

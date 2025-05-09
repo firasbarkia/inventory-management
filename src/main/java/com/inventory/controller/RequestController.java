@@ -69,10 +69,12 @@ public class RequestController {
             request.setWorker(workers.get(0));
         }
         if (request.getItem() != null && request.getItem().getId() != null) {
-            itemRepository.findById(request.getItem().getId()).ifPresent(request::setItem);
+			Long itemId = request.getItem().getId();
+            itemRepository.findById(itemId).ifPresent(item -> {
+                request.setItem(item);
+            });
         }
         Request saved = requestRepository.save(request);
-
 
         notificationService.createWorkerNotification(saved);
         return ResponseEntity.ok(new RequestDTO(saved));
@@ -81,7 +83,11 @@ public class RequestController {
     @PreAuthorize("hasAnyAuthority('WORKER')")
     @PutMapping("/{id}")
     public ResponseEntity<RequestDTO> updateRequestStatus(@PathVariable Long id, @RequestBody Request request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return requestRepository.findById(id).map(existing -> {
+            if (!existing.getWorker().getUsername().equals(username)) {
+                return ResponseEntity.status(403).body(new RequestDTO()); // Forbidden
+            }
             existing.setStatus(request.getStatus());
             Request updated = requestRepository.save(existing);
             return ResponseEntity.ok(new RequestDTO(updated));
@@ -91,6 +97,8 @@ public class RequestController {
     @PreAuthorize("hasAuthority('TEACHER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRequest(@PathVariable Long id) {
+        // Delete worker notifications associated with the request
+        notificationService.deleteWorkerNotificationsByRequestId(id);
         requestRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

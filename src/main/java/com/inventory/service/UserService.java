@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +28,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setAccountStatus(AccountStatus.PENDING); // Set default status to PENDING
-        // Optionally clear roles or set a default PENDING role if needed
-        // user.setRoles(Set.of("ROLE_PENDING")); // Example if you want a specific role marker
-		System.out.println("Encoded password: " + user.getPassword());
+        user.setAccountStatus(AccountStatus.PENDING); 
         return userRepository.save(user);
     }
 
@@ -74,7 +72,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 }
