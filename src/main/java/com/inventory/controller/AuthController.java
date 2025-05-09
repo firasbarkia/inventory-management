@@ -8,7 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,14 +37,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
+        userService.createUser(user);
         User registeredUser = userService.getUserByUsername(user.getUsername());
-        UserDetails userDetails = userDetailsService.loadUserByUsername(registeredUser.getUsername());
-        Set<String> roles = userDetails.getAuthorities().stream()
-                .map(auth -> auth.getAuthority())
-                .collect(java.util.stream.Collectors.toSet());
-        String token = jwtUtil.generateToken(registeredUser.getUsername(), roles);
-        return ResponseEntity.ok(Map.of("token", token, "accountStatus", registeredUser.getAccountStatus().toString(), "roles", roles));
+        // Don't generate a token for newly registered users since they need admin approval
+        return ResponseEntity.ok(Map.of("message", "Registration successful. Please wait for admin approval.",
+                                       "accountStatus", registeredUser.getAccountStatus().toString()));
     }
 
     @PostMapping("/login")
